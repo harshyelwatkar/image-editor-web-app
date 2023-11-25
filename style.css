@@ -154,6 +154,11 @@ img {
   color: #fff;
   background: #6c757d;
 }
+.controls .crop {
+  color: black;
+  background-color: white;
+  border: 1px solid grey;
+}
 .controls .choose-img {
   background: #6c757d;
   border: 1px solid #6c757d;
