@@ -107,3 +107,90 @@ resetFilterBtn.addEventListener("click", resetFilter);
 saveImgBtn.addEventListener("click", saveImage);
 fileInput.addEventListener("change", loadImage);
 chooseImgBtn.addEventListener("click", () => fileInput.click());
+
+document.addEventListener('DOMContentLoaded', function () {
+    const fileInput = document.querySelector('.file-input');
+    const cropButton = document.querySelector('.crop');
+    const previewImg = document.querySelector('.preview-img img');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    let isCropping = false;
+    let startX, startY, endX, endY;
+  
+    fileInput.addEventListener('change', handleFileSelect);
+    cropButton.addEventListener('click', toggleCrop);
+  
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+  
+      if (file) {
+        const reader = new FileReader();
+  
+        reader.onload = function (e) {
+          const img = new Image();
+          img.onload = function () {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            previewImg.src = canvas.toDataURL('image/png');
+          };
+          img.src = e.target.result;
+        };
+  
+        reader.readAsDataURL(file);
+      }
+    }
+  
+    function toggleCrop() {
+      isCropping = !isCropping;
+      if (isCropping) {
+        previewImg.style.cursor = 'crosshair';
+        previewImg.addEventListener('mousedown', startCrop);
+      } else {
+        previewImg.style.cursor = 'default';
+        previewImg.removeEventListener('mousedown', startCrop);
+      }
+    }
+  
+    function startCrop(e) {
+      startX = e.clientX;
+      startY = e.clientY;
+  
+      document.addEventListener('mousemove', drawCrop);
+      document.addEventListener('mouseup', endCrop);
+    }
+  
+    function drawCrop(e) {
+      endX = e.clientX;
+      endY = e.clientY;
+  
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(previewImg, 0, 0, canvas.width, canvas.height);
+  
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+    }
+  
+    function endCrop() {
+      document.removeEventListener('mousemove', drawCrop);
+      document.removeEventListener('mouseup', endCrop);
+  
+      // Crop the selected area
+      const width = Math.abs(endX - startX);
+      const height = Math.abs(endY - startY);
+  
+      const croppedImage = ctx.getImageData(startX, startY, width, height);
+  
+      // Update canvas size to match the cropped area
+      canvas.width = width;
+      canvas.height = height;
+  
+      // Clear the canvas and draw the cropped image
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.putImageData(croppedImage, 0, 0);
+  
+      // Update the preview image with the cropped version
+      previewImg.src = canvas.toDataURL('image/png');
+    }
+  });
